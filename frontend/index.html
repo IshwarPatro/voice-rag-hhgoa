@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-RAG | MSMARCO-XI Portal</title>
+    <link rel="icon" type="image/png" href="/gini_favicon.png">
+    <!-- Modern Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #080710;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-glow: #7a22ff;
+            --secondary-glow: #00d2ff;
+            --accent-glow: #ff007f;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 1rem;
+            position: relative;
+        }
+
+        /* Ambient glowing background orbs */
+        .orb {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb-left {
+            background-color: var(--primary-glow);
+            top: 10%;
+            left: -100px;
+            animation: float 20s ease-in-out infinite alternate;
+        }
+
+        .orb-right {
+            background-color: var(--secondary-glow);
+            bottom: 10%;
+            right: -100px;
+            animation: float 20s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(50px) scale(1.1); }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, var(--secondary-glow) 70%, var(--primary-glow) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            min-height: 550px;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Left Console Panel */
+        .console-panel {
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        /* Interactive Voice Bubble */
+        .voice-bubble-wrapper {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-bubble {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(122, 34, 255, 0.4);
+            border: none;
+            outline: none;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .voice-bubble:active {
+            transform: scale(0.95);
+        }
+
+        .voice-bubble svg {
+            width: 50px;
+            height: 50px;
+            fill: #fff;
+            transition: fill 0.3s ease;
+        }
+
+        /* Pulsing voice wave rings when recording */
+        .ring {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary-glow);
+            opacity: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .recording .ring-1 {
+            animation: pulse-ring 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
+
+        .recording .ring-2 {
+            animation: pulse-ring 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 0.6s;
+        }
+
+        .recording .ring-3 {
+            animation: pulse-ring 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 1.2s;
+        }
+
+        .recording .voice-bubble {
+            background: linear-gradient(135deg, var(--accent-glow), var(--primary-glow));
+            box-shadow: 0 0 40px rgba(255, 0, 127, 0.6);
+            animation: breathing 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        @keyframes breathing {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .control-label {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .control-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Input Toggler */
+        .input-toggle {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--secondary-glow);
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            font-family: inherit;
+        }
+
+        .text-input-container {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .text-input-container.active {
+            display: flex;
+        }
+
+        .query-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .query-input:focus {
+            border-color: var(--secondary-glow);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            color: #fff;
+            font-family: inherit;
+            font-weight: 500;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Language Select */
+        .lang-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        /* Right Dashboard Panel */
+        .dashboard-panel {
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-left: 3.5px solid var(--secondary-glow);
+            padding-left: 0.65rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Conversation text space */
+        .conversation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+
+        .qa-bubble {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 16px;
+            padding: 1.2rem;
+        }
+
+        .qa-field {
+            margin-bottom: 0.75rem;
+        }
+
+        .qa-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .qa-lbl {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .qa-txt {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .qa-txt-hindi {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        /* Latency breakdown stats grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .metric-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: baseline;
+            gap: 0.15rem;
+        }
+        
+        .metric-val span {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .latency-status {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.2rem;
+        }
+
+        .latency-status.met {
+            color: var(--success-color);
+        }
+
+        .latency-status.exceeded {
+            color: var(--warning-color);
+        }
+
+        /* Latency Bar Charts */
+        .chart-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        .bar-label {
+            width: 100px;
+            color: var(--text-muted);
+        }
+
+        .bar-track {
+            flex-grow: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 9999px;
+            margin: 0 0.8rem;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-glow), var(--secondary-glow));
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.1, 0.8, 0.2, 1);
+            border-radius: 9999px;
+        }
+
+        .bar-val {
+            width: 50px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        /* Sources */
+        .sources-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .sources-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sources-box::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .source-item {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .source-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.4rem;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-left"></div>
+    <div class="orb orb-right"></div>
+
+    <header>
+        <img src="/gini.png" alt="Gini Logo" style="width: 140px; height: 140px; margin-bottom: 1rem; border-radius: 20px; box-shadow: 0 0 25px rgba(228,211,41,0.2), 0 0 12px rgba(71,139,141,0.2);">
+        <h1>Voice-RAG Portal</h1>
+        <p>Ultra-low Latency Indic Retrieval-Augmented Generation Harness</p>
+        <div class="badge-container">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                Qdrant Collection Local: Seeded
+            </div>
+            <div class="badge">
+                Target SLA: &lt;200ms
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Inside Left: Voice Input Console -->
+        <div class="glass-card console-panel" id="consoleCard">
+            <label class="control-label" id="statusLabel">Tap to Speak</label>
+            <p class="control-sub" id="statusSub">Listening Hindi (hi-IN) Queries</p>
+            
+            <div class="voice-bubble-wrapper" id="vWrapper">
+                <button class="voice-bubble" id="recordBtn" onclick="toggleRecording()">
+                    <!-- Mic Icon -->
+                    <svg viewBox="0 0 24 24" id="micIcon">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                    </svg>
+                    <!-- Stop Icon (hidden by default) -->
+                    <svg viewBox="0 0 24 24" id="stopIcon" style="display:none;">
+                        <path d="M6 19h12V5H6v14z"/>
+                    </svg>
+                </button>
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+            </div>
+
+            <div>
+                <select class="lang-select" id="langSelect">
+                    <option value="hi-IN">Hindi (hi-IN)</option>
+                    <option value="en-US">English (en-US)</option>
+                </select>
+            </div>
+
+            <button class="input-toggle" id="toggleInputBtn" onclick="toggleInputMode()">Or type your query</button>
+            
+            <!-- Hidden Text Input Box -->
+            <div class="text-input-container" id="textContainer">
+                <input type="text" class="query-input" id="textQuery" placeholder="प्रश्नों को यहाँ टाइप करें..." />
+                <button class="send-btn" onclick="submitTextQuery()">Execute Search</button>
+            </div>
+        </div>
+
+        <!-- Inside Right: Realtime Performance Dashboard -->
+        <div class="glass-card dashboard-panel">
+            <div class="conversation-container">
+                <div class="section-title">Query Processing Logs</div>
+                
+                <div class="qa-bubble">
+                    <div class="qa-field">
+                        <div class="qa-lbl">Transcribed Query</div>
+                        <div class="qa-txt qa-txt-hindi" id="outQuery">-</div>
+                    </div>
+                    <div class="qa-field">
+                        <div class="qa-lbl">System Answer (Source Context Grounded)</div>
+                        <div class="qa-txt" id="outAnswer">-</div>
+                    </div>
+                </div>
+
+                <div class="section-title">End-to-End Latency Profile</div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="qa-lbl">Total Turnaround</div>
+                        <div class="metric-val" id="valTotal">0.00<span>ms</span></div>
+                        <div class="latency-status" id="lblStatus">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="qa-lbl">Pipeline Status Logs</div>
+                        <div class="metric-val" id="valStatus" style="font-size:1.1rem; padding-top:0.3rem;">READY</div>
+                        <div class="latency-status" id="lblDetails" style="color:var(--text-muted);">Awaiting Input</div>
+                    </div>
+                </div>
+
+                <!-- Latency progress breakdown bars -->
+                <div class="chart-box" style="margin-top:0.5rem;">
+                    <div class="bar-row">
+                        <span class="bar-label">STT (Audio)</span>
+                        <div class="bar-track"><div class="bar-fill" id="barSTT"></div></div>
+                        <span class="bar-val" id="lblSTT">0ms</span>
+                    </div>
+                    <div class="bar-row">
+                        <span class="bar-label">Moderation</span>
+                        <div class="bar-track"><div class="bar-fill" id="barMod"></div></div>
+                        <span class="bar-val" id="lblMod">0ms</span>
+                    </div>
+                    <div class="bar-row">
+                        <span class="bar-label">Retrieval</span>
+                        <div class="bar-track"><div class="bar-fill" id="barRet"></div></div>
+                        <span class="bar-val" id="lblRet">0ms</span>
+                    </div>
+                    <div class="bar-row">
+                        <span class="bar-label">Generation</span>
+                        <div class="bar-track"><div class="bar-fill" id="barGen"></div></div>
+                        <span class="bar-val" id="lblGen">0ms</span>
+                    </div>
+                    <div class="bar-row">
+                        <span class="bar-label">Groundedness</span>
+                        <div class="bar-track"><div class="bar-fill" id="barGrd"></div></div>
+                        <span class="bar-val" id="lblGrd">0ms</span>
+                    </div>
+                </div>
+
+                <div class="section-title" style="margin-top:1rem;">Retrieved Citations & Contexts</div>
+                <div class="sources-box" id="sourcesContainer">
+                    <p style="color:var(--text-muted); font-size:0.85rem;">No citations loaded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frontend Interactive Javascript Logic -->
+    <script>
+        const API_URL = "http://localhost:8000";
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        function toggleInputMode() {
+            const container = document.getElementById("textContainer");
+            const btn = document.getElementById("toggleInputBtn");
+            if (container.classList.contains("active")) {
+                container.classList.remove("active");
+                btn.innerText = "Or type your query";
+            } else {
+                container.classList.add("active");
+                btn.innerText = "Switch to audio record";
+            }
+        }
+
+        async function toggleRecording() {
+            const wrapper = document.getElementById("vWrapper");
+            const micIcon = document.getElementById("micIcon");
+            const stopIcon = document.getElementById("stopIcon");
+            const statusLabel = document.getElementById("statusLabel");
+
+            if (!isRecording) {
+                // Request mic permission
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        // Send binary to server
+                        uploadAudio(audioBlob);
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    wrapper.classList.add("recording");
+                    micIcon.style.display = "none";
+                    stopIcon.style.display = "block";
+                    statusLabel.innerText = "Listening...";
+                } catch (err) {
+                    alert("Audio input microphone permission rejected: " + err.message);
+                }
+            } else {
+                mediaRecorder.stop();
+                // Stop all tracks on the stream to release mic lock
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                isRecording = false;
+                wrapper.classList.remove("recording");
+                micIcon.style.display = "block";
+                stopIcon.style.display = "none";
+                statusLabel.innerText = "Processing Voice Audio...";
+            }
+        }
+
+        async function uploadAudio(blob) {
+            const lang = document.getElementById("langSelect").value;
+            const formData = new FormData();
+            formData.append("file", blob, "user_voice.wav");
+            formData.append("language_code", lang);
+
+            updateUIRunningState();
+            
+            try {
+                const response = await fetch(`${API_URL}/api/voice`, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                renderResponseData(data);
+            } catch (err) {
+                renderErrorState(err.message);
+            }
+        }
+
+        async function submitTextQuery() {
+            const queryVal = document.getElementById("textQuery").value.trim();
+            if (!queryVal) return;
+
+            const lang = document.getElementById("langSelect").value;
+            updateUIRunningState();
+
+            try {
+                const response = await fetch(`${API_URL}/api/query`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        query: queryVal,
+                        language_code: lang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                renderResponseData(data);
+            } catch (err) {
+                renderErrorState(err.message);
+            }
+        }
+
+        function updateUIRunningState() {
+            document.getElementById("statusLabel").innerText = "Executing Search...";
+            document.getElementById("valStatus").innerText = "RUNNING";
+            document.getElementById("valStatus").style.color = "var(--secondary-glow)";
+        }
+
+        function renderResponseData(data) {
+            document.getElementById("statusLabel").innerText = "Tap to Speak";
+            document.getElementById("outQuery").innerText = data.query || "-";
+            document.getElementById("outAnswer").innerText = data.answer || "-";
+            document.getElementById("valStatus").innerText = data.status || "SUCCESS";
+            
+            // Adjust status indicator color
+            if (data.status === "SUCCESS") {
+                document.getElementById("valStatus").style.color = "var(--success-color)";
+            } else if (data.status.startsWith("REJECTED") || data.status.startsWith("ERROR")) {
+                document.getElementById("valStatus").style.color = "var(--danger-color)";
+            } else {
+                document.getElementById("valStatus").style.color = "var(--warning-color)";
+            }
+
+            // Latency breakdown metrics
+            const lat = data.latency || {};
+            const total = lat.total || 0;
+            document.getElementById("valTotal").innerHTML = `${total.toFixed(2)}<span>ms</span>`;
+            
+            const slaLabel = document.getElementById("lblStatus");
+            if (total <= 200) {
+                slaLabel.innerText = "✓ Met SLA (<200ms)";
+                slaLabel.className = "latency-status met";
+            } else {
+                slaLabel.innerText = "⚠ Exceeded SLA (>200ms)";
+                slaLabel.className = "latency-status exceeded";
+            }
+
+            document.getElementById("lblSTT").innerText = `${lat.stt.toFixed(1)}ms`;
+            document.getElementById("lblMod").innerText = `${lat.moderation.toFixed(1)}ms`;
+            document.getElementById("lblRet").innerText = `${lat.retrieval.toFixed(1)}ms`;
+            document.getElementById("lblGen").innerText = `${lat.generation.toFixed(1)}ms`;
+            document.getElementById("lblGrd").innerText = `${lat.groundedness.toFixed(1)}ms`;
+
+            // Draw bar chart widths
+            const maxPart = Math.max(lat.stt, lat.moderation, lat.retrieval, lat.generation, lat.groundedness, 1);
+            document.getElementById("barSTT").style.width = `${(lat.stt / maxPart) * 100}%`;
+            document.getElementById("barMod").style.width = `${(lat.moderation / maxPart) * 100}%`;
+            document.getElementById("barRet").style.width = `${(lat.retrieval / maxPart) * 100}%`;
+            document.getElementById("barGen").style.width = `${(lat.generation / maxPart) * 100}%`;
+            document.getElementById("barGrd").style.width = `${(lat.groundedness / maxPart) * 100}%`;
+
+            // Render citations
+            const sourcesDiv = document.getElementById("sourcesContainer");
+            sourcesDiv.innerHTML = "";
+            
+            if (!data.context || data.context.length === 0) {
+                sourcesDiv.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">No citations loaded.</p>`;
+            } else {
+                data.context.forEach((doc, index) => {
+                    const item = document.createElement("div");
+                    item.className = "source-item";
+                    item.innerHTML = `
+                        <p>${doc.text}</p>
+                        <div class="source-meta">
+                            <span>Score: ${doc.score.toFixed(3)}</span>
+                            <span>Ground Truth Flag: ${doc.is_ground_truth ? 'Yes (Selected)' : 'No'}</span>
+                        </div>
+                    `;
+                    sourcesDiv.appendChild(item);
+                });
+            }
+            
+            document.getElementById("lblDetails").innerText = `Complete turnaround executed in ${total.toFixed(1)}ms.`;
+        }
+
+        function renderErrorState(errMsg) {
+            document.getElementById("statusLabel").innerText = "Tap to Speak";
+            document.getElementById("valStatus").innerText = "FAIL";
+            document.getElementById("valStatus").style.color = "var(--danger-color)";
+            document.getElementById("valTotal").innerHTML = `0.00<span>ms</span>`;
+            document.getElementById("lblDetails").innerText = `Connection Failed: ${errMsg}`;
+        }
+    </script>
+</body>
+</html>
