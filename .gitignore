@@ -1,0 +1,26 @@
+# Python bytecode and artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# Node dependencies and builds
+node_modules/
+dist/
+.env
+
+# Vector DB & Local Data files
+data/
+local_qdrant/
+*.db
+*.sqlite
+
+# OS and IDE files
+.DS_Store
+.idea/
+.vscode/
+*.swp
