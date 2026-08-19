@@ -24,3 +24,10 @@ local_qdrant/
 .idea/
 .vscode/
 *.swp
+
+# Excluded instruction and planning documents
+INSTRUCTIONS.md
+task 2_ hhg.md
+approach_plan.md
+approach_plan.html
+
