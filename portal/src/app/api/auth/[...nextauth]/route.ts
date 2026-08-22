@@ -1,6 +1,13 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
+// Dynamically define NEXTAUTH_URL to prevent boot crash on Vercel serverless environment
+if (!process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}` 
+    : 'http://localhost:3000';
+}
+
 declare module 'next-auth' {
   interface Session {
     user: {
