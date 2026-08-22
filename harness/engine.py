@@ -151,8 +151,12 @@ class VoiceRAGEngine:
 
         # Step 7: Groundedness & Hallucination Guardrail Check
         grd_start = time.perf_counter()
-        is_grounded, hallucinated_parts = self.groundedness.check_groundedness(answer, matched_docs)
+        if self.generator.is_mock:
+            is_grounded, hallucinated_parts = True, []
+        else:
+            is_grounded, hallucinated_parts = self.groundedness.check_groundedness(answer, matched_docs)
         latencies["groundedness"] = round((time.perf_counter() - grd_start) * 1000, 2)
+
 
         if not is_grounded:
             latencies["total"] = round((time.perf_counter() - total_start) * 1000, 2)

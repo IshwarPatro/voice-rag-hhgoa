@@ -190,24 +190,24 @@ export default function DashboardPage() {
 
   // Extract metrics & print outputs of STT/Moderation/Retrieval pipeline
   const processResponseData = (data: any, networkTimeMs: number) => {
-    const lat = data.latencies || {};
+    const lat = data.latency || {};
     
     // Set individual performance metric segments
     setLatencies({
-      stt: lat.stt ? Math.round(lat.stt * 1000) : 0,
-      moderation: lat.moderation ? Math.round(lat.moderation * 1000) : 0,
-      retrieval: lat.retrieval ? Math.round(lat.retrieval * 1000) : 0,
-      llm: lat.llm ? Math.round(lat.llm * 1000) : 0,
-      total: lat.total ? Math.round(lat.total * 1000) : networkTimeMs
+      stt: lat.stt ? Math.round(lat.stt) : 0,
+      moderation: lat.moderation ? Math.round(lat.moderation) : 0,
+      retrieval: lat.retrieval ? Math.round(lat.retrieval) : 0,
+      llm: lat.generation ? Math.round(lat.generation) : 0,
+      total: lat.total ? Math.round(lat.total) : networkTimeMs
     });
 
-    setTranscript(data.query_text || "");
-    const generatedAnswer = data.response_text || "Refusal: No grounded answer found in collection.";
+    setTranscript(data.query || "");
+    const generatedAnswer = data.answer || "Refusal: No grounded answer found in collection.";
     setResponse(generatedAnswer);
 
-    addLogMsg(`STT Transcription: "${data.query_text || ''}"`);
-    addLogMsg(`Moderation safety checks passed: ${data.is_safe}`);
-    addLogMsg(`Vector Retrieval fetched: ${lat.retracted_docs_count || 0} chunks`);
+    addLogMsg(`STT Transcription: "${data.query || ''}"`);
+    addLogMsg(`Moderation safety checks passed: ${data.status !== 'REJECTED_SAFETY'}`);
+    addLogMsg(`Vector Retrieval fetched: ${data.context ? data.context.length : 0} chunks`);
     addLogMsg(`LLM Generation complete. Generated: ${generatedAnswer.substring(0, 45)}...`);
     addLogMsg(`Execution metrics: P50 score successfully verified.`);
 
@@ -218,19 +218,20 @@ export default function DashboardPage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        queryText: data.query_text || "Voice query",
+        queryText: data.query || "Voice query",
         responseText: generatedAnswer,
-        latencyStt: lat.stt ? lat.stt * 1000 : 0,
-        latencyModeration: lat.moderation ? lat.moderation * 1000 : 0,
-        latencyRetrieval: lat.retrieval ? lat.retrieval * 1000 : 0,
-        latencyLlm: lat.llm ? lat.llm * 1000 : 0,
-        latencyTotal: lat.total ? lat.total * 1000 : networkTimeMs,
-        isSafe: data.is_safe !== false
+        latencyStt: lat.stt ? Math.round(lat.stt) : 0,
+        latencyModeration: lat.moderation ? Math.round(lat.moderation) : 0,
+        latencyRetrieval: lat.retrieval ? Math.round(lat.retrieval) : 0,
+        latencyLlm: lat.generation ? Math.round(lat.generation) : 0,
+        latencyTotal: lat.total ? Math.round(lat.total) : networkTimeMs,
+        isSafe: data.status !== 'REJECTED_SAFETY'
       })
     }).then(() => loadHistory());
 
     setIsProcessing(false);
   };
+
 
   const handleLogout = () => {
     window.location.href = '/login';
