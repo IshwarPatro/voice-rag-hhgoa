@@ -41,28 +41,12 @@ export default function DashboardPage() {
     total: 0
   });
 
-  const [history, setHistory] = useState<QueryLog[]>([]);
-  const [dbError, setDbError] = useState(false);
+
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // Load history logs from Nest/Drizzle model on load
-  const loadHistory = async () => {
-    try {
-      const res = await fetch('/api/logs');
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data);
-      }
-    } catch {
-      setDbError(true);
-    }
-  };
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
 
   const addLogMsg = (msg: string) => {
     const time = new Date().toLocaleTimeString();
@@ -227,7 +211,7 @@ export default function DashboardPage() {
         latencyTotal: lat.total ? Math.round(lat.total) : networkTimeMs,
         isSafe: data.status !== 'REJECTED_SAFETY'
       })
-    }).then(() => loadHistory());
+    });
 
     setIsProcessing(false);
   };
@@ -242,11 +226,10 @@ export default function DashboardPage() {
       {/* Top Header Navbar */}
       <header className="bg-surface-bright border-b-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex justify-between items-center px-container-margin py-4 w-full sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <Image src="/gini.png" alt="gini Logo" width={110} height={35} className="object-contain" priority />
+          <Image src="/gini-v2.png" alt="gini Logo" width={110} height={35} className="object-contain" priority />
         </div>
         <nav className="hidden md:flex gap-6">
           <span className="text-secondary border-b-4 border-secondary pb-1 font-space font-bold cursor-pointer">Dashboard</span>
-          <span className="text-on-background hover:text-tertiary transition-colors font-space font-bold cursor-pointer" onClick={loadHistory}>Reload History</span>
         </nav>
         <button 
           onClick={handleLogout}
@@ -467,16 +450,7 @@ export default function DashboardPage() {
         </section>
       </main>
 
-      {/* Footer Column links */}
-      <footer className="bg-black text-tertiary border-t-[3px] border-black mt-auto flex flex-col md:flex-row justify-between items-center px-12 py-6 w-full z-50 relative gap-2 font-space">
-        <div className="font-bold text-primary text-sm uppercase tracking-wide">VOICE-RAG CORP GINI</div>
-        <div className="text-gray-500 text-xs font-bold">© 1994 VOICE-RAG CORP BRANDED SYSTEMS. ALL RIGHTS RESERVED.</div>
-        <div className="flex gap-4 text-xs font-bold">
-          <a href="#" className="hover:text-primary transition-colors">SUPPORT</a>
-          <a href="#" className="hover:text-primary transition-colors">PRIVACY</a>
-          <a href="#" className="hover:text-primary transition-colors">DOCS</a>
-        </div>
-      </footer>
+
     </div>
   );
 }

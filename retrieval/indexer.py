@@ -19,11 +19,30 @@ DB_PATH = "local_qdrant"
 
 def get_qdrant_client():
     """
-    Returns a Qdrant client. First tries local directory persistent DB,
-    falling back to standard port-based client if configuration dictates.
+    Returns a Qdrant client. Supports remote URL and API Key connections
+    if configured via env, falling back to local persistent storage.
     """
-    print(f"Initializing Qdrant client at local directory: '{DB_PATH}'...")
-    return QdrantClient(path=DB_PATH)
+    qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+    qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    
+    if qdrant_host.startswith("http://") or qdrant_host.startswith("https://") or qdrant_api_key:
+        print(f"Connecting to remote Qdrant database: {qdrant_host} with 60s timeout...")
+        return QdrantClient(
+            url=qdrant_host,
+            api_key=qdrant_api_key,
+            timeout=60.0
+        )
+    elif qdrant_host != "localhost":
+        print(f"Connecting to local Qdrant server at {qdrant_host}:{os.getenv('QDRANT_PORT', '6333')}...")
+        return QdrantClient(
+            host=qdrant_host,
+            port=int(os.getenv("QDRANT_PORT", "6333")),
+            api_key=qdrant_api_key,
+            timeout=60.0
+        )
+    else:
+        print(f"Initializing Qdrant client at local directory: '{DB_PATH}'...")
+        return QdrantClient(path=DB_PATH)
 
 def load_indic_dataset(limit=50):
     """
@@ -201,11 +220,16 @@ def seed_database():
                 ))
                 point_id_counter += 1
                 
-    print(f"Uploading {len(points)} vector chunks to Qdrant collection...")
-    client.upsert(
-        collection_name=QDRANT_COLLECTION,
-        points=points
-    )
+    print(f"Uploading {len(points)} vector chunks to Qdrant collection in batches...")
+    batch_size = 100
+    total_batches = -(-len(points) // batch_size)
+    for i in range(0, len(points), batch_size):
+        batch = points[i : i + batch_size]
+        print(f"Upserting batch {i//batch_size + 1}/{total_batches} ({len(batch)} points)...")
+        client.upsert(
+            collection_name=QDRANT_COLLECTION,
+            points=batch
+        )
     print("Database seeding completed successfully!")
 
 if __name__ == "__main__":

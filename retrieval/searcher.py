@@ -13,7 +13,24 @@ class VectorSearcher:
     def __init__(self, embedder=None, client=None):
         # Allow passing existing instances to reduce memory load
         self.embedder = embedder or SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        self.client = client or QdrantClient(path=DB_PATH)
+        if client:
+            self.client = client
+        else:
+            qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+            qdrant_api_key = os.getenv("QDRANT_API_KEY")
+            if qdrant_host.startswith("http://") or qdrant_host.startswith("https://") or qdrant_api_key:
+                self.client = QdrantClient(
+                    url=qdrant_host,
+                    api_key=qdrant_api_key
+                )
+            elif qdrant_host != "localhost":
+                self.client = QdrantClient(
+                    host=qdrant_host,
+                    port=int(os.getenv("QDRANT_PORT", "6333")),
+                    api_key=qdrant_api_key
+                )
+            else:
+                self.client = QdrantClient(path=DB_PATH)
 
     def search(self, query_text, limit=3, score_threshold=0.55):
         """

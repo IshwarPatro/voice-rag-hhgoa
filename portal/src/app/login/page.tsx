@@ -52,7 +52,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md bg-surface-container neo-border neo-shadow-lg transform -rotate-1 p-8 relative flex flex-col gap-6">
         <div className="flex justify-center items-center gap-2 mb-4">
-          <Image src="/gini.png" alt="Gini Logo" width={120} height={40} className="object-contain" priority />
+          <Image src="/gini-v2.png" alt="Gini Logo" width={120} height={40} className="object-contain" priority />
         </div>
 
         <h2 className="font-space text-2xl font-bold text-center text-spicy-yellow uppercase tracking-wider border-b-4 border-black pb-2">

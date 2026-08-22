@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const contentType = req.headers.get('content-type') || '';
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
     
     if (contentType.includes('application/json')) {
       const body = await req.json();
-      const response = await fetch('http://127.0.0.1:8000/api/query', {
+      const response = await fetch(`${BACKEND_URL}/api/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
       const formData = await req.formData();
       
       // Target correct multipart post to FastAPI app (VoiceRAGEngine)
-      const response = await fetch('http://127.0.0.1:8000/api/voice', {
+      const response = await fetch(`${BACKEND_URL}/api/voice`, {
         method: 'POST',
         body: formData,
       });

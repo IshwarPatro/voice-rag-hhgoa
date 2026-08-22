@@ -15,7 +15,21 @@ class VoiceRAGEngine:
         # 1. Share resources (Model and DB Client) to save RAM and initialization latency
         print("Initializing SentenceTransformer and Qdrant DB connection in Orchestrator Engine...")
         self.shared_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        self.shared_db_client = QdrantClient(path=DB_PATH)
+        qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+        qdrant_api_key = os.getenv("QDRANT_API_KEY")
+        if qdrant_host.startswith("http://") or qdrant_host.startswith("https://") or qdrant_api_key:
+            self.shared_db_client = QdrantClient(
+                url=qdrant_host,
+                api_key=qdrant_api_key
+            )
+        elif qdrant_host != "localhost":
+            self.shared_db_client = QdrantClient(
+                host=qdrant_host,
+                port=int(os.getenv("QDRANT_PORT", "6333")),
+                api_key=qdrant_api_key
+            )
+        else:
+            self.shared_db_client = QdrantClient(path=DB_PATH)
         
         # 2. Instantiate individual modular units
         self.transcriber = SarvamTranscriber()
