@@ -30,12 +30,10 @@ A high-performance, voice-enabled Retrieval-Augmented Generation (RAG) system ta
     └── index.html           # Ambient, premium glassmorphism assistant interface
 ```
 
----
-
 ## Setup & Installations
 
 ### 1. Prerequisites
-Ensure Python 3.10+ is installed on your system.
+Ensure Python 3.10+ and Node.js 18+ are installed on your system.
 
 ### 2. Install Project Dependencies
 Run the installation command in your local environment:
@@ -43,47 +41,65 @@ Run the installation command in your local environment:
 python -m pip install -r requirements.txt
 ```
 
+Inside the `portal` directory, install Next.js frontend packages:
+```bash
+cd portal
+npm install
+```
+
 ### 3. Configure Credentials (.env)
-Create a `.env` file in the project root directory and define the keys. (Optional/placeholders trigger local simulation/mock modes for cost-free developmental runs):
+Create a `.env` file in the project root directory:
 ```env
 SARVAM_API_KEY=your_sarvam_api_key_here
-GROQ_API_KEY=your_groq_api_key_here
+HF_TOKEN=your_huggingface_api_token_here
+```
+*(Optional/placeholders trigger local simulation/mock modes for cost-free developmental runs)*
+
+Configure the database credentials for logging inside `portal/.env`:
+```env
+DATABASE_URL=postgres://username:password@your-database-host:5432/voicerag?sslmode=require
+NEXTAUTH_SECRET=a_random_32_character_string
 ```
 
 ---
 
 ## Execution Guide
 
+To run the complete Voice-RAG system, you will need to run the **FastAPI backend** (ML processing engine) and the **Next.js frontend portal** side-by-side.
+
 ### Step 1: Ingest & Seed Database
-Download the `ai4bharat/MSMARCO-XI` Hindi validation dataset, compute semantic splits, and populate the local vector database instance:
+Download the `ai4bharat/MSMARCO-XI` Hindi validation dataset, compute semantic splits, and populate the local Qdrant collection:
 ```bash
 python retrieval/indexer.py
 ```
 *Note: This will download files and save them to a local `local_qdrant/` catalog in the project root.*
 
-### Step 2: Start the FastAPI Portal Server
-Launch the unified server to host the APIs and serve the frontend dashboard portal:
+### Step 2: Start the FastAPI Backend Engine
+Launch the Python orchestration engine uvicorn server in your first terminal session:
 ```bash
 PYTHONPATH=. uvicorn app:app --port 8000
 ```
 
-### Step 3: Access the Voice-RAG Workspace
-Open your web browser and navigate to:
-```url
-http://127.0.0.1:8000/
+### Step 3: Run the Next.js Frontend Portal
+Open a new terminal window, navigate to the `portal/` subdirectory, and boot up the visual dashboard website:
+```bash
+cd portal
+npm run dev
 ```
 
-*   **Vocal Search**: Tap the glowing blue microphone icon, speak your Hindi geography or informational query, and tap again to stop.
-*   **Text Search**: Click the "Or type your query" toggle link to reveal the text input pane, type your request (e.g. `एक कंपनी कहाँ निगमित होती है?`), and click **Execute Search**.
-
-The dashboard will show real-time metrics, system statuses, latency budgets (SLA <200ms indicator), transcriptions, response logs, and matched database citations!
+### Step 4: Access the Voice-RAG Workspace
+Open your web browser and navigate to:
+```url
+http://localhost:3000
+```
+*Login using client sessions (Credentials are validated via NextAuth)*
 
 ---
 
 ## Verification & Testing
 
 ### Running the Test Suite
-Execute the automated validation suite measuring refusals, off-topics, safety issues, and groundedness rules:
+Execute the automated validation suite measuring safety filters, off-topics, and groundedness rules:
 ```bash
 PYTHONPATH=. pytest tests/
 ```
@@ -94,3 +110,4 @@ Evaluate turnaround speed over **55 dataset queries** and print P50 / P70 / P90 
 PYTHONPATH=. python retrieval/latency_analytics.py
 ```
 *Latency metrics are generated and saved to `metrics/latency_report.csv`.*
+
