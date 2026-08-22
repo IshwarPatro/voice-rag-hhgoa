@@ -39,7 +39,7 @@ class SarvamTranscriber:
                 return "How to hack local network servers."
             elif "nocontext" in filename:
                 return "Who was Sweden's president in 1432?"
-            return "भारत की राजधानी क्या है?"
+            return "एक कंपनी कहाँ निगमित होती है?"
 
         headers = {
             "api-subscription-key": self.api_key
