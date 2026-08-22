@@ -9,9 +9,12 @@ os.environ["TORCH_NUM_THREADS"] = "1"
 
 import shutil
 import tempfile
-import torch
-# Restrict torch computation concurrency overhead
-torch.set_num_threads(1)
+try:
+    import torch
+    # Restrict torch computation concurrency overhead if installed
+    torch.set_num_threads(1)
+except ImportError:
+    pass
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
