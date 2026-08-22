@@ -1,9 +1,9 @@
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from retrieval.embedder import HuggingFaceEmbedder
 
 class GroundednessChecker:
     def __init__(self, embedder=None):
-        self.embedder = embedder or SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        self.embedder = embedder or HuggingFaceEmbedder('paraphrase-multilingual-MiniLM-L12-v2')
 
     def check_groundedness(self, answer, context_docs, threshold=0.55):
         """

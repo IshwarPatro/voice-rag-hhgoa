@@ -1,7 +1,7 @@
 import os
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
-from sentence_transformers import SentenceTransformer
+from retrieval.embedder import HuggingFaceEmbedder
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,7 +12,7 @@ DB_PATH = "local_qdrant"
 class VectorSearcher:
     def __init__(self, embedder=None, client=None):
         # Allow passing existing instances to reduce memory load
-        self.embedder = embedder or SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        self.embedder = embedder or HuggingFaceEmbedder('paraphrase-multilingual-MiniLM-L12-v2')
         if client:
             self.client = client
         else:

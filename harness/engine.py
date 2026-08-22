@@ -1,7 +1,7 @@
 import os
 import time
 from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
+from retrieval.embedder import HuggingFaceEmbedder
 from stt.transcriber import SarvamTranscriber
 from retrieval.searcher import VectorSearcher
 from generation.generator import LLMGenerator
@@ -13,8 +13,8 @@ DB_PATH = "local_qdrant"
 class VoiceRAGEngine:
     def __init__(self):
         # 1. Share resources (Model and DB Client) to save RAM and initialization latency
-        print("Initializing SentenceTransformer and Qdrant DB connection in Orchestrator Engine...")
-        self.shared_embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        print("Initializing HuggingFaceEmbedder and Qdrant DB connection in Orchestrator Engine...")
+        self.shared_embedder = HuggingFaceEmbedder('paraphrase-multilingual-MiniLM-L12-v2')
         qdrant_host = os.getenv("QDRANT_HOST", "localhost")
         qdrant_api_key = os.getenv("QDRANT_API_KEY")
         if qdrant_host.startswith("http://") or qdrant_host.startswith("https://") or qdrant_api_key:

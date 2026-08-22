@@ -4,7 +4,10 @@ import pandas as pd
 import numpy as np
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    from retrieval.embedder import HuggingFaceEmbedder as SentenceTransformer
 from dotenv import load_dotenv
 
 # Load env file paths
