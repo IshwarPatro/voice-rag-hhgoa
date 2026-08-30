@@ -1,6 +1,10 @@
 # Voice-RAG system for MSMARCO-XI
 
-A high-performance, voice-enabled Retrieval-Augmented Generation (RAG) system targeting the `ai4bharat/MSMARCO-XI` dataset with a strict sub-200ms latency profile. Built with FastAPI, Qdrant, Sarvam AI STT, and Groq LLM.
+### 🚀 Production Deployment Links
+*   **Voice Portal Frontend (Vercel)**: [https://voice-rag-hhgoa-3sds23ukb-ishwarpatros-projects.vercel.app](https://voice-rag-hhgoa-3sds23ukb-ishwarpatros-projects.vercel.app)
+*   **Orchestrator Backend (Render)**: [https://voice-rag-hhgoa-ggml.onrender.com](https://voice-rag-hhgoa-ggml.onrender.com)
+
+A high-performance, voice-enabled Retrieval-Augmented Generation (RAG) system targeting the `ai4bharat/MSMARCO-XI` dataset with a strict sub-200ms latency profile. Built with Next.js, FastAPI, Qdrant, Sarvam AI STT, and Hugging Face Gemma-9B.
 
 ---
 
